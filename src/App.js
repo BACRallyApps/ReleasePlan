@@ -11,6 +11,7 @@ Ext.define('CustomApp', {
       defaultSettings: {
         includeBefore: 0,
         includeAfter: 0,
+        includePartialSprints: false,
         teamVelocity: 50
       }
     },
@@ -20,6 +21,10 @@ Ext.define('CustomApp', {
         name: 'teamVelocity',
         label: 'Velocity',
         xtype: 'rallynumberfield'
+      }, {
+        name: 'includePartialSprints',
+        label: 'Include Partial Sprints',
+        xtype: 'rallycheckboxfield'
       }];
     },
 
@@ -63,15 +68,18 @@ Ext.define('CustomApp', {
       var query;
       var rangeBound = parseInt('' + me.getSetting('rangeBound'), 0);
       var chart;
+      var includePartialIterations = !!me.getSetting('includePartialSprints');
+      var beginProperty = includePartialIterations ? 'Iteration.EndDate' : 'Iteration.StartDate';
+      var endProperty = includePartialIterations ? 'Iteration.StartDate' : 'Iteration.EndDate';
 
       me.removeAll(true);
 
       query = Rally.data.QueryFilter.and([{
-        property: 'Iteration.StartDate',
+        property: beginProperty,
         operator: '>=',
         value: Rally.util.DateTime.toIsoString(scope.getRecord().get('ReleaseStartDate'))
       }, {
-        property: 'Iteration.EndDate',
+        property: endProperty,
         operator: '<=',
         value: Rally.util.DateTime.toIsoString(scope.getRecord().get('ReleaseDate'))
       }]);
