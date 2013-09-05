@@ -9,8 +9,9 @@ Ext.define('CustomApp', {
     settingsScope: 'project',
     config: {
       defaultSettings: {
-        rangeBound: 0,
-        teamVelocity: 12
+        includeBefore: 0,
+        includeAfter: 0,
+        teamVelocity: 50
       }
     },
 
@@ -65,22 +66,15 @@ Ext.define('CustomApp', {
 
       me.removeAll(true);
 
-      if (rangeBound === 0) { // Just the selected release
-        query = Rally.data.QueryFilter.and([{
-          property: 'Iteration.StartDate',
-          operator: '>=',
-          value: Rally.util.DateTime.toIsoString(scope.getRecord().get('ReleaseStartDate'))
-        }, {
-          property: 'Iteration.EndDate',
-          operator: '<=',
-          value: Rally.util.DateTime.toIsoString(scope.getRecord().get('ReleaseDate'))
-        }]);
-      } else if (rangeBound < 0) { // All releases up to and including the selected release
-      } else if (rangeBound > 0) { // All releases starting with the current release
-      } else { // Something went wrong
-        console.error('Something went wrong', rangeBound, me.getSetting('rangeBound'));
-        return;
-      }
+      query = Rally.data.QueryFilter.and([{
+        property: 'Iteration.StartDate',
+        operator: '>=',
+        value: Rally.util.DateTime.toIsoString(scope.getRecord().get('ReleaseStartDate'))
+      }, {
+        property: 'Iteration.EndDate',
+        operator: '<=',
+        value: Rally.util.DateTime.toIsoString(scope.getRecord().get('ReleaseDate'))
+      }]);
 
       chart = Ext.create('Rally.ui.chart.Chart', {
         storeType: 'Rally.data.WsapiDataStore',

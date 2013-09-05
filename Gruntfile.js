@@ -8,7 +8,7 @@ module.exports = function(grunt) {
   grunt.loadNpmTasks('grunt-contrib-watch');
   grunt.loadNpmTasks('grunt-contrib-concat');
   grunt.loadNpmTasks('grunt-templater');
-  grunt.loadNpmTasks('rally-app-builder');
+  grunt.loadNpmTasks('rally-app-builder-grunt');
 
   grunt.registerTask('default', ['clean', 'concat', 'template']);
   grunt.registerTask('test', ['default', 'jasmine']);
@@ -88,7 +88,7 @@ module.exports = function(grunt) {
 
     rallydeploy: {
       options: {
-        server: config.server,
+        server: 'demo02.rallydev.com',
         projectOid: 711487,
         deployFile: "deploy.json",
         credentialsFile: "credentials.json"
