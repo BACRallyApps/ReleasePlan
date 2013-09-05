@@ -77,11 +77,11 @@ Ext.define('CustomApp', {
       query = Rally.data.QueryFilter.and([{
         property: beginProperty,
         operator: '>=',
-        value: Rally.util.DateTime.toIsoString(scope.getRecord().get('ReleaseStartDate'))
+        value: me._getStartDate(scope)
       }, {
         property: endProperty,
         operator: '<=',
-        value: Rally.util.DateTime.toIsoString(scope.getRecord().get('ReleaseDate'))
+        value: me._getEndDate(scope)
       }]);
 
       chart = Ext.create('Rally.ui.chart.Chart', {
@@ -118,6 +118,14 @@ Ext.define('CustomApp', {
       });
 
       me.add(chart);
+    },
+
+    _getStartDate: function (scope) {
+      return Rally.util.DateTime.toIsoString(scope.getRecord().get('ReleaseStartDate'));
+    },
+
+    _getEndDate: function (scope) {
+      return Rally.util.DateTime.toIsoString(scope.getRecord().get('ReleaseDate'));
     },
 
     _getStoreConfig: function (query) {
