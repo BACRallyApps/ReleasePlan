@@ -62,7 +62,7 @@ Ext.define('ReleasePlanCalculator', {
 
       series.push({
         type: 'column',
-        name: 'Planned',
+        name: 'Planned (' + velocity + ')',
         data: plannedBurnup
       });
 
