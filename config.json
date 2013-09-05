@@ -1,0 +1,17 @@
+{
+    "name": "Release Plan",
+    "className": "CustomApp",
+    "server": "https://demo02.rallydev.com",
+    "sdk": "2.0rc1",
+    "remote_javascript": [
+    ],
+    "javascript": [
+        "src/Calculator.js",
+        "src/App.js"
+    ],
+    "remote_css": [
+    ],
+    "css": [
+        "styles/app.css"
+    ]
+}
