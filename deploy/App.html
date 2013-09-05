@@ -141,6 +141,14 @@ Ext.define('CustomApp', {
       }
     },
 
+    getSettingsFields: function () {
+      return [{
+        name: 'teamVelocity',
+        label: 'Velocity',
+        xtype: 'rallynumberfield'
+      }];
+    },
+
     addContent: function (scope) {
       var me = this;
 
