@@ -9,7 +9,8 @@ Ext.define('CustomApp', {
     settingsScope: 'project',
     config: {
       defaultSettings: {
-        rangeBound: 0
+        rangeBound: 0,
+        teamVelocity: 12
       }
     },
 
@@ -52,6 +53,7 @@ Ext.define('CustomApp', {
       var me = this;
       var query;
       var rangeBound = parseInt('' + me.getSetting('rangeBound'), 0);
+      var chart;
 
       me.removeAll(true);
 
@@ -59,11 +61,11 @@ Ext.define('CustomApp', {
         query = Rally.data.QueryFilter.and([{
           property: 'Iteration.StartDate',
           operator: '>=',
-          value: scope.getRecord().get('ReleaseStartDate')
+          value: Rally.util.DateTime.toIsoString(scope.getRecord().get('ReleaseStartDate'))
         }, {
           property: 'Iteration.EndDate',
           operator: '<=',
-          value: scope.getRecord().get('ReleaseDate')
+          value: Rally.util.DateTime.toIsoString(scope.getRecord().get('ReleaseDate'))
         }]);
       } else if (rangeBound < 0) { // All releases up to and including the selected release
       } else if (rangeBound > 0) { // All releases starting with the current release
@@ -72,11 +74,14 @@ Ext.define('CustomApp', {
         return;
       }
 
-      Ext.create('Rally.ui.chart.Chart', {
+      chart = Ext.create('Rally.ui.chart.Chart', {
         storeType: 'Rally.data.WsapiDataStore',
         storeConfig: me._getStoreConfig(query),
 
         calculatorType: 'ReleasePlanCalculator',
+        calculatorConfig: {
+          velocity: me.getSetting('teamVelocity')
+        },
 
         chartConfig: {
           chart: {
@@ -101,17 +106,18 @@ Ext.define('CustomApp', {
           }
         }
       });
+
+      me.add(chart);
     },
 
     _getStoreConfig: function (query) {
       var stores = [];
 
-      Ext.Array.each(['HierarchicalRequirement', 'Defect'], function (itm) {
+      Ext.Array.each(['HierarchicalRequirement', 'Defect'], function (type) {
         stores.push({
-          autoLoad: true,
-          model: 'HierarchicalRequirement',
+          model: type,
           filters: query,
-          fetch: ['Name', 'Iteration', 'StartDate', 'EndDate', 'PlanEstimate', 'ScheduleState']
+          fetch: ['Name', 'Iteration', 'StartDate', 'EndDate', 'PlanEstimate', 'ScheduleState', 'AcceptedDate']
         });
       });
 

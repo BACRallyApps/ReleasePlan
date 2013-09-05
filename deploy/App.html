@@ -15,9 +15,113 @@ var Ext = window.Ext4 || window.Ext;
 Ext.define('ReleasePlanCalculator', {
     extend: 'Rally.data.lookback.calculator.BaseCalculator',
 
+    prepareChartData: function (stores) {
+      var snapshots = [];
+
+      Ext.Array.each(stores, function (store) {
+        store.each(function (record) {
+          snapshots.push(record.raw);
+        });
+      });
+
+      return this.runCalculation(snapshots);
+    },
+
     runCalculation: function (records) {
       console.log('Running Calculations');
       console.dir(records);
+
+      var me = this;
+      var rawData = {};
+      var acceptedRawData = {};
+      var iterationData = {};
+      var categories;
+      var series = [];
+      var totalCount = 0;
+      var toplineCount = 0;
+      var plannedBurnup = [];
+      var topline = [];
+      var velocity = parseInt(me.velocity + '', 10);
+      var i, ii;
+
+      Ext.Array.each(records, function (record) {
+        var key = me._getBucketKey(record);
+        rawData[key] = me._pushRecord(rawData[key], record);
+
+        if (record.AcceptedDate) {
+          acceptedRawData[key] = me._pushRecord(acceptedRawData[key], record);
+        }
+      });
+
+      Ext.Object.each(rawData, function (key, data) {
+        iterationData[key] = 0;
+      });
+
+      Ext.Object.each(acceptedRawData, function (key, data) {
+        totalCount = me._sumArray(data) + totalCount;
+        iterationData[key] = totalCount;
+      });
+
+      series.push({
+        type: 'column',
+        name: 'Actuals',
+        data: Ext.Object.getValues(iterationData)
+      });
+
+      for (i = 1, ii = Ext.Object.getKeys(iterationData).length; i <= ii; i++) {
+        plannedBurnup.push(i * velocity);
+      }
+
+      series.push({
+        type: 'column',
+        name: 'Planned',
+        data: plannedBurnup
+      });
+
+      Ext.Object.each(rawData, function (key, data) {
+        toplineCount = me._sumArray(data) + toplineCount;
+      });
+
+      for (i = 1, ii = Ext.Object.getKeys(iterationData).length; i <= ii; i++) {
+        topline.push(toplineCount);
+      }
+
+      series.push({
+        type: 'line',
+        name: 'topline',
+        data: topline
+      });
+
+      return {
+        categories: Ext.Object.getKeys(iterationData),
+        series: series
+      };
+    },
+
+    _getBucketKey: function (record) {
+      return record.Iteration.Name;
+    },
+
+    _pushRecord: function (arr, itm) {
+      if (!Ext.isArray(arr)) {
+        return [itm];
+      } else {
+        return arr.concat([itm]);
+      }
+    },
+
+    _sumArray: function (arr) {
+      var count = 0;
+
+      Ext.Array.each(arr, function (item) {
+        var num = parseInt(item.PlanEstimate + '', 10);
+
+        if (!isNaN(num)) {
+          count = count + num;
+        }
+      });
+
+      return count;
     }
 });
 
@@ -32,7 +136,8 @@ Ext.define('CustomApp', {
     settingsScope: 'project',
     config: {
       defaultSettings: {
-        rangeBound: 0
+        rangeBound: 0,
+        teamVelocity: 12
       }
     },
 
@@ -75,6 +180,7 @@ Ext.define('CustomApp', {
       var me = this;
       var query;
       var rangeBound = parseInt('' + me.getSetting('rangeBound'), 0);
+      var chart;
 
       me.removeAll(true);
 
@@ -82,11 +188,11 @@ Ext.define('CustomApp', {
         query = Rally.data.QueryFilter.and([{
           property: 'Iteration.StartDate',
           operator: '>=',
-          value: scope.getRecord().get('ReleaseStartDate')
+          value: Rally.util.DateTime.toIsoString(scope.getRecord().get('ReleaseStartDate'))
         }, {
           property: 'Iteration.EndDate',
           operator: '<=',
-          value: scope.getRecord().get('ReleaseDate')
+          value: Rally.util.DateTime.toIsoString(scope.getRecord().get('ReleaseDate'))
         }]);
       } else if (rangeBound < 0) { // All releases up to and including the selected release
       } else if (rangeBound > 0) { // All releases starting with the current release
@@ -95,11 +201,14 @@ Ext.define('CustomApp', {
         return;
       }
 
-      Ext.create('Rally.ui.chart.Chart', {
+      chart = Ext.create('Rally.ui.chart.Chart', {
         storeType: 'Rally.data.WsapiDataStore',
         storeConfig: me._getStoreConfig(query),
 
         calculatorType: 'ReleasePlanCalculator',
+        calculatorConfig: {
+          velocity: me.getSetting('teamVelocity')
+        },
 
         chartConfig: {
           chart: {
@@ -124,17 +233,18 @@ Ext.define('CustomApp', {
           }
         }
       });
+
+      me.add(chart);
     },
 
     _getStoreConfig: function (query) {
       var stores = [];
 
-      Ext.Array.each(['HierarchicalRequirement', 'Defect'], function (itm) {
+      Ext.Array.each(['HierarchicalRequirement', 'Defect'], function (type) {
         stores.push({
-          autoLoad: true,
-          model: 'HierarchicalRequirement',
+          model: type,
           filters: query,
-          fetch: ['Name', 'Iteration', 'StartDate', 'EndDate', 'PlanEstimate', 'ScheduleState']
+          fetch: ['Name', 'Iteration', 'StartDate', 'EndDate', 'PlanEstimate', 'ScheduleState', 'AcceptedDate']
         });
       });
 
