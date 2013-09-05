@@ -99,7 +99,9 @@ Ext.define('ReleasePlanCalculator', {
     },
 
     _getBucketKey: function (record) {
-      return record.Iteration.Name;
+      var date = Rally.util.DateTime.format(Rally.util.DateTime.fromIsoString(record.Iteration.EndDate), 'm/d/Y');
+      console.log('Date', date, record.Iteration.EndDate);
+      return record.Iteration.Name + '<br>' + date;
     },
 
     _pushRecord: function (arr, itm) {
