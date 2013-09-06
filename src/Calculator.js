@@ -27,12 +27,18 @@ Ext.define('ReleasePlanCalculator', {
       var series = [];
       var totalCount = 0;
       var toplineCount = 0;
+      var piToplineCount = 0;
+      var piTopline = [];
       var plannedBurnup = [];
       var topline = [];
       var velocity = parseInt(me.velocity + '', 10);
       var i, ii;
 
       Ext.Array.each(records, function (record) {
+        if (record._type.toLowerCase().indexOf('portfolio') !== -1) {
+          return;
+        }
+
         var key = me._getBucketKey(record);
         rawData[key] = me._pushRecord(rawData[key], record);
 
@@ -76,8 +82,35 @@ Ext.define('ReleasePlanCalculator', {
 
       series.push({
         type: 'line',
-        name: 'topline',
+        name: 'Story Point Topline',
         data: topline
+      });
+
+      Ext.Array.each(records, function (record) {
+        var value = NaN;
+        if (record._type.toLowerCase().indexOf('portfolio') === -1) {
+          return;
+        }
+
+        if (record.PreliminaryEstimate) {
+          value = parseInt(record.PreliminaryEstimate.Value + '', 10);
+        }
+
+        console.log('Value for PI', record, value);
+
+        if (!isNaN(value)) {
+          piToplineCount = piToplineCount + value;
+        }
+      });
+
+      for (i = 1, ii = Ext.Object.getKeys(iterationData).length; i <= ii; i++) {
+        piTopline.push(piToplineCount);
+      }
+
+      series.push({
+        type: 'line',
+        name: 'Feature Point Topline',
+        data: piTopline
       });
 
       return {

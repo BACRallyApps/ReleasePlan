@@ -129,6 +129,7 @@ Ext.define('CustomApp', {
     },
 
     _getStoreConfig: function (query) {
+      var me = this;
       var stores = [];
 
       Ext.Array.each(['HierarchicalRequirement', 'Defect'], function (type) {
@@ -137,6 +138,12 @@ Ext.define('CustomApp', {
           filters: query,
           fetch: ['Name', 'Iteration', 'StartDate', 'EndDate', 'PlanEstimate', 'ScheduleState', 'AcceptedDate']
         });
+      });
+
+      stores.push({
+        model: me.piTypes['0'],
+        filters: me.getContext().getTimeboxScope().getQueryFilter(),
+        fetch: ['Name', 'Release', 'ReleaseStartDate', 'ReleaseDate', 'PreliminaryEstimate', 'Value']
       });
 
       return stores;
