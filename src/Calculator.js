@@ -120,7 +120,12 @@ Ext.define('ReleasePlanCalculator', {
     },
 
     _getBucketKey: function (record) {
-      var date = Rally.util.DateTime.format(Rally.util.DateTime.fromIsoString(record.Iteration.EndDate), 'm/d/Y');
+      var rawDate = Rally.util.DateTime.fromIsoString(record.Iteration.EndDate);
+      var timezone = Rally.util.DateTime.parseTimezoneOffset(record.Iteration.EndDate);
+      var localDate = Rally.util.DateTime.add(rawDate, 'minute', timezone * -1);
+
+      console.log('Date', rawDate, localDate);
+      var date = Rally.util.DateTime.formatWithDefault(localDate);
       return record.Iteration.Name + '<br>' + date;
     },
 

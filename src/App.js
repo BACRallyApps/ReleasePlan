@@ -70,17 +70,20 @@ Ext.define('CustomApp', {
       var chart;
       var includePartialIterations = !!me.getSetting('includePartialSprints');
       var beginProperty = includePartialIterations ? 'Iteration.EndDate' : 'Iteration.StartDate';
+      var beginOp = includePartialIterations ? '>' : '>=';
       var endProperty = includePartialIterations ? 'Iteration.StartDate' : 'Iteration.EndDate';
+      var endOp = includePartialIterations ? '<' : '<=';
+
 
       me.removeAll(true);
 
       query = Rally.data.QueryFilter.and([{
         property: beginProperty,
-        operator: '>=',
+        operator: beginOp,
         value: me._getStartDate(scope)
       }, {
         property: endProperty,
-        operator: '<=',
+        operator: endOp,
         value: me._getEndDate(scope)
       }]);
 
@@ -121,22 +124,22 @@ Ext.define('CustomApp', {
     },
 
     _getStartDate: function (scope) {
-      return Rally.util.DateTime.toIsoString(scope.getRecord().get('ReleaseStartDate'));
+      return scope.getRecord().raw.ReleaseStartDate;
     },
 
     _getEndDate: function (scope) {
-      return Rally.util.DateTime.toIsoString(scope.getRecord().get('ReleaseDate'));
+      return scope.getRecord().raw.ReleaseDate;
     },
 
     _getStoreConfig: function (query) {
       var me = this;
       var stores = [];
 
-      Ext.Array.each(['HierarchicalRequirement', 'Defect'], function (type) {
+      Ext.Array.each(['HierarchicalRequirement', 'Defect', 'DefectSuite'], function (type) {
         stores.push({
           model: type,
           filters: query,
-          fetch: ['Name', 'Iteration', 'StartDate', 'EndDate', 'PlanEstimate', 'ScheduleState', 'AcceptedDate']
+          fetch: ['Name', 'Iteration', 'StartDate', 'EndDate', 'Release', 'ReleaseStartDate', 'ReleaseDate', 'PlanEstimate', 'ScheduleState', 'AcceptedDate']
         });
       });
 
