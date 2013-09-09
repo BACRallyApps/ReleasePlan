@@ -146,7 +146,7 @@ Ext.define('CustomApp', {
       stores.push({
         model: me.piTypes['0'],
         filters: me.getContext().getTimeboxScope().getQueryFilter(),
-        fetch: ['Name', 'Release', 'ReleaseStartDate', 'ReleaseDate', 'PreliminaryEstimate', 'Value']
+        fetch: ['Name', 'Release', 'ReleaseStartDate', 'ReleaseDate', 'PreliminaryEstimate', 'Value', 'UserStories', 'PlanEstimate']
       });
 
       return stores;
