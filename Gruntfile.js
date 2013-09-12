@@ -89,7 +89,7 @@ module.exports = function(grunt) {
     rallydeploy: {
       options: {
         server: 'demo02.rallydev.com',
-        projectOid: 711487,
+        projectOid: 711989,
         deployFile: "deploy.json",
         credentialsFile: "credentials.json"
       },

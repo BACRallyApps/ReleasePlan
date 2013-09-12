@@ -1,11 +1,13 @@
 var Ext = window.Ext4 || window.Ext;
 
-var __map = function (recField, mapField, records) {
+var __map = function (mapField, records) {
   var map = {};
 
   Ext.Array.each(records, function (record) {
-    if (record[recField]) {
-      map[record[recField][mapField]] = record[recField];
+    if (record.raw) {
+      map[record.raw[mapField]] = record.raw;
+    } else {
+      map[record[mapField]] = record;
     }
   });
 
@@ -54,6 +56,10 @@ Ext.define('ReleasePlanCalculator', {
           return;
         }
 
+        if (record._type.toLowerCase().indexOf('iteration') !== -1) {
+          return;
+        }
+
         var key = me._getBucketKey(record);
         rawData[key] = me._pushRecord(rawData[key], record);
       });
@@ -70,6 +76,10 @@ Ext.define('ReleasePlanCalculator', {
           return;
         }
 
+        if (record._type.toLowerCase().indexOf('iteration') !== -1) {
+          return;
+        }
+
         var key = me._getBucketKey(record);
 
         if (record.AcceptedDate) {
@@ -80,28 +90,88 @@ Ext.define('ReleasePlanCalculator', {
       return acceptedRawData;
     },
 
-    _mapReleasesByName: Ext.bind(__map, this, ['Release', 'Name'], 0),
+    _computeNumberOfIterations: function (releases) {
+      var startRelease = releases[0];
+      var endRelease = releases[releases.length - 1];
+      var count = 0;
+      var max = 100;
+      var currentDate = Rally.util.DateTime.fromIsoString(startRelease.raw.ReleaseStartDate);
+      var endDate = Rally.util.DateTime.fromIsoString(endRelease.raw.ReleaseDate);
+
+      while (Rally.util.DateTime.getDifference(currentDate, endDate, 'day') < 0) {
+        count++;
+        currentDate = Rally.util.DateTime.add(currentDate, 'day', 14);
+      }
+
+      return count;
+    },
+
+    _shimFutureIterations: function (iterationOrder, iterationMap, totalIterations) {
+      var me = this;
+      var lastIteration = iterationMap[iterationOrder[iterationOrder.length - 1]];
+      var currentDate = Rally.util.DateTime.fromIsoString(lastIteration.EndDate);
+      var numToCreate = totalIterations - iterationOrder.length;
+      var iteration = { Name: '', EndDate: ''};
+      var iterations = [];
+      var i;
+
+      for (i = 0; i < numToCreate; i++) {
+        currentDate = Rally.util.DateTime.add(currentDate, 'day', 14);
+        iteration.Name = "Future Iteration " + (i + 1);
+        iteration.EndDate = Rally.util.DateTime.toIsoString(currentDate);
+        iterations.push(me._getIterationKey(iteration));
+      }
+
+      return iterations;
+    },
+
+    _mapReleasesByName: Ext.bind(__map, this, ['Name'], 0),
 
     _sortReleasesByStartDate: Ext.bind(__sortByDate, this, ['ReleaseStartDate', 'Name'], 0),
 
-    _mapIterationsByName: Ext.bind(__map, this, ['Iteration', 'Name'], 0),
+    _mapIterationsByName: Ext.bind(__map, this, ['Name'], 0),
 
     _sortIterationsByStartDate: Ext.bind(__sortByDate, this, ['StartDate', 'Name'], 0),
+
+    _getIterations: function (records) {
+      var iterations = [];
+
+      Ext.Array.each(records, function (record) {
+        if (record._type.toLowerCase() !== 'iteration') { return; }
+
+        iterations.push(record);
+      });
+
+      return iterations;
+    },
 
     runCalculation: function (records) {
       console.log('Running Calculations');
       console.dir(records);
 
       var me = this;
-      var releaseMap = me._mapReleasesByName(records);
+      var releaseMap = me._mapReleasesByName(me.releases);
       var releaseOrder = me._sortReleasesByStartDate(releaseMap);
-      var iterationMap = me._mapIterationsByName(records);
+
+      me.iterations = me._getIterations(records);
+
+      var iterationMap = me._mapIterationsByName(me.iterations);
       var iterationOrder = me._sortIterationsByStartDate(iterationMap);
 
       var rawData = me._bucketArtifactsIntoIterations(records);
       var acceptedRawData = me._bucketAcceptedArtifactsIntoIterations(records);
       var iterationData = {};
 
+      me.releases.sort(function (a, b) {
+        var da = Rally.util.DateTime.fromIsoString(a.raw.ReleaseStartDate);
+        var db = Rally.util.DateTime.fromIsoString(b.raw.ReleaseStartDate);
+        return Rally.util.DateTime.getDifference(da, db, 'day');
+      });
+
+      var countOfIterations = me._computeNumberOfIterations(me.releases);
+      var iterationShim = me._shimFutureIterations(iterationOrder, iterationMap, countOfIterations);
+
+      debugger;
       var categories;
       var series = [];
       var totalCount = 0;
@@ -135,11 +205,9 @@ Ext.define('ReleasePlanCalculator', {
 
         if (plannedBurnup.length > 0) {
           prev = actualBurnup[plannedBurnup.length - 1];
-          console.log('prev has actual?', actualBurnup, prev);
 
           if (!prev) {
             prev = plannedBurnup[plannedBurnup.length - 1];
-            console.log('prev does not have actual?', plannedBurnup, prev);
           }
         } else {
           prev = 0;
@@ -147,6 +215,22 @@ Ext.define('ReleasePlanCalculator', {
 
         plannedBurnup.push(prev + velocity);
         actualBurnup.push(iterationData[key]);
+      });
+
+      Ext.Array.each(iterationShim, function (iteration) {
+        var prev = 0;
+
+        if (plannedBurnup.length > 0) {
+          prev = actualBurnup[plannedBurnup.length - 1];
+
+          if (!prev) {
+            prev = plannedBurnup[plannedBurnup.length - 1];
+          }
+        } else {
+          prev = 0;
+        }
+
+        plannedBurnup.push(prev + velocity);
       });
 
       series.push({
@@ -203,7 +287,7 @@ Ext.define('ReleasePlanCalculator', {
       });
 
       return {
-        categories: Ext.Object.getKeys(iterationData),
+        categories: Ext.Object.getKeys(iterationData).concat(iterationShim),
         series: series
       };
     },
