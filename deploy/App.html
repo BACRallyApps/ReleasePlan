@@ -230,44 +230,25 @@ Ext.define('ReleasePlanCalculator', {
       var plannedBurnup = [];
       var velocity = parseInt(me.velocity + '', 10);
       var i, ii;
+      var prev = 0;
 
 
       Ext.Object.each(rawData, function (key, data) {
         iterationData[key] = 0;
       });
 
-      Ext.Array.each(allIterations, function (iteration) {
-        var key = me._getIterationKey(iterationMap[iteration]);
-        var amount = me._sumArray(acceptedRawData[key])
-        totalCount = amount + totalCount;
-
-        if (amount) {
-          iterationData[key] = totalCount;
-        }
-      });
-      //Ext.Object.each(acceptedRawData, function (key, data) {
-        //totalCount = me._sumArray(data) + totalCount;
-        //iterationData[key] = totalCount;
-      //});
-
-      console.log('iterationOrder', iterationOrder);
       Ext.Array.each(allIterations, function (iterationName) {
         var key = me._getIterationKey(iterationMap[iterationName]);
-        var prev = 0;
-
-        if (plannedBurnup.length > 0) {
-          prev = actualBurnup[plannedBurnup.length - 1];
-
-          if (!prev) {
-            prev = plannedBurnup[plannedBurnup.length - 1];
-          }
-        } else {
-          prev = 0;
-        }
+        var amount = me._sumArray(acceptedRawData[key]);
 
         plannedBurnup.push(prev + velocity);
-        if (iterationData[key]) {
-          actualBurnup.push(iterationData[key]);
+
+        if (amount) {
+          totalCount = amount + totalCount;
+          actualBurnup.push(totalCount);
+          prev = totalCount;
+        } else {
+          prev = prev + velocity;
         }
       });
       debugger;
