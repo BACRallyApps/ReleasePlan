@@ -200,7 +200,7 @@ Ext.define('ReleasePlanCalculator', {
 
       var releaseData = me._bucketFeaturesIntoReleases(records);
 
-      //debugger;
+      debugger;
       var categories;
       var series = [];
       var totalCount = 0;
@@ -249,6 +249,7 @@ Ext.define('ReleasePlanCalculator', {
           actualBurnup.push(iterationData[key]);
         }
       });
+      debugger;
 
       series.push({
         type: 'column',
