@@ -147,7 +147,7 @@ Ext.define('ReleasePlanCalculator', {
         iteration.Name = "Future Iteration " + (i + 1);
         iteration.StartDate = Rally.util.DateTime.toIsoString(currentSDate);
         iteration.EndDate = Rally.util.DateTime.toIsoString(currentEDate);
-        iterations.push(me._getIterationKey(iteration));
+        iterations.push(iteration.Name);
         iterationMap[iteration.Name] = iteration; // TODO: Remove side effect
       }
 
@@ -185,7 +185,7 @@ Ext.define('ReleasePlanCalculator', {
 
     runCalculation: function (records) {
       console.log('Running Calculations');
-      console.dir(records);
+      //console.dir(records);
 
       var me = this;
       var releaseMap = me._mapReleasesByName(me.releases);
@@ -208,18 +208,21 @@ Ext.define('ReleasePlanCalculator', {
 
       var countOfIterations = me._computeNumberOfIterations(me.releases);
       var iterationShim = me._shimFutureIterations(iterationOrder, iterationMap, countOfIterations);
+      var allIterations = iterationOrder.concat(iterationShim);
 
       var releaseData = me._bucketFeaturesIntoReleases(records);
 
-      debugger;
+      //debugger;
       var categories;
       var series = [];
       var totalCount = 0;
 
       var toplineCount = 0;
+      var toplineData = {};
       var topline = [];
 
       var piToplineCount = 0;
+      var piToplineData = {};
       var piTopline = [];
 
       var actualBurnup = [];
@@ -239,7 +242,7 @@ Ext.define('ReleasePlanCalculator', {
       });
 
       console.log('iterationOrder', iterationOrder);
-      Ext.Array.each(iterationOrder, function (iterationName) {
+      Ext.Array.each(allIterations, function (iterationName) {
         var key = me._getIterationKey(iterationMap[iterationName]);
         var prev = 0;
 
@@ -257,22 +260,6 @@ Ext.define('ReleasePlanCalculator', {
         if (iterationData[key]) {
           actualBurnup.push(iterationData[key]);
         }
-      });
-
-      Ext.Array.each(iterationShim, function (iteration) {
-        var prev = 0;
-
-        if (plannedBurnup.length > 0) {
-          prev = actualBurnup[plannedBurnup.length - 1];
-
-          if (!prev) {
-            prev = plannedBurnup[plannedBurnup.length - 1];
-          }
-        } else {
-          prev = 0;
-        }
-
-        plannedBurnup.push(prev + velocity);
       });
 
       series.push({
@@ -301,6 +288,8 @@ Ext.define('ReleasePlanCalculator', {
         data: topline
       });
 
+      Ext.Object.each(me.releases, function (release) {
+      });
       Ext.Array.each(records, function (record) {
         var value = NaN;
         if (record._type.toLowerCase().indexOf('portfolio') === -1) {
@@ -475,7 +464,6 @@ Ext.define('CustomApp', {
             return Rally.util.DateTime.getDifference(da, db, 'day');
           });
 
-          debugger;
           me._createChart(rels);
         }
       };
