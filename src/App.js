@@ -97,7 +97,6 @@ Ext.define('CustomApp', {
             return Rally.util.DateTime.getDifference(da, db, 'day');
           });
 
-          debugger;
           me._createChart(rels);
         }
       };

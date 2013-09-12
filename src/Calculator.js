@@ -90,6 +90,19 @@ Ext.define('ReleasePlanCalculator', {
       return acceptedRawData;
     },
 
+    _bucketFeaturesIntoReleases: function (records) {
+      var bucket = {};
+      Ext.Array.each(records, function (record) {
+        if (record._type.toLowerCase().indexOf('portfolioitem') === -1) { return; }
+        if (!record.Release) { return; }
+
+        bucket[record.Release.Name] = bucket[record.Release.Name] || [];
+        bucket[record.Release.Name].push(record);
+      });
+
+      return bucket;
+    },
+
     _computeNumberOfIterations: function (releases) {
       var startRelease = releases[0];
       var endRelease = releases[releases.length - 1];
@@ -109,20 +122,33 @@ Ext.define('ReleasePlanCalculator', {
     _shimFutureIterations: function (iterationOrder, iterationMap, totalIterations) {
       var me = this;
       var lastIteration = iterationMap[iterationOrder[iterationOrder.length - 1]];
-      var currentDate = Rally.util.DateTime.fromIsoString(lastIteration.EndDate);
+      var currentSDate = Rally.util.DateTime.fromIsoString(lastIteration.StartDate);
+      var currentEDate = Rally.util.DateTime.fromIsoString(lastIteration.EndDate);
       var numToCreate = totalIterations - iterationOrder.length;
       var iteration = { Name: '', EndDate: ''};
       var iterations = [];
       var i;
 
       for (i = 0; i < numToCreate; i++) {
-        currentDate = Rally.util.DateTime.add(currentDate, 'day', 14);
+        currentSDate = Rally.util.DateTime.add(currentSDate, 'day', 14);
+        currentEDate = Rally.util.DateTime.add(currentEDate, 'day', 14);
         iteration.Name = "Future Iteration " + (i + 1);
-        iteration.EndDate = Rally.util.DateTime.toIsoString(currentDate);
-        iterations.push(me._getIterationKey(iteration));
+        iteration.StartDate = Rally.util.DateTime.toIsoString(currentSDate);
+        iteration.EndDate = Rally.util.DateTime.toIsoString(currentEDate);
+        iterations.push(iteration.Name);
+        iterationMap[iteration.Name] = iteration; // TODO: Remove side effect
       }
 
       return iterations;
+    },
+
+    _isIterationInRelease: function (iteration, release) {
+      var iStart = Rally.util.DateTime.fromIsoString(iteration.StartDate);
+      var rStart = Rally.util.DateTime.fromIsoString(release.ReleaseStartDate);
+      var rEnd = Rally.util.DateTime.fromIsoString(release.ReleaseDate);
+
+      return !!((Rally.util.DateTime.difference(iStart, rStart, 'day') >= 0) &&
+                (Rally.util.DateTime.difference(rEnd, iStart, 'day') >= 0));
     },
 
     _mapReleasesByName: Ext.bind(__map, this, ['Name'], 0),
@@ -147,7 +173,7 @@ Ext.define('ReleasePlanCalculator', {
 
     runCalculation: function (records) {
       console.log('Running Calculations');
-      console.dir(records);
+      //console.dir(records);
 
       var me = this;
       var releaseMap = me._mapReleasesByName(me.releases);
@@ -170,16 +196,21 @@ Ext.define('ReleasePlanCalculator', {
 
       var countOfIterations = me._computeNumberOfIterations(me.releases);
       var iterationShim = me._shimFutureIterations(iterationOrder, iterationMap, countOfIterations);
+      var allIterations = iterationOrder.concat(iterationShim);
 
-      debugger;
+      var releaseData = me._bucketFeaturesIntoReleases(records);
+
+      //debugger;
       var categories;
       var series = [];
       var totalCount = 0;
 
       var toplineCount = 0;
+      var toplineData = {};
       var topline = [];
 
       var piToplineCount = 0;
+      var piToplineData = {};
       var piTopline = [];
 
       var actualBurnup = [];
@@ -199,7 +230,7 @@ Ext.define('ReleasePlanCalculator', {
       });
 
       console.log('iterationOrder', iterationOrder);
-      Ext.Array.each(iterationOrder, function (iterationName) {
+      Ext.Array.each(allIterations, function (iterationName) {
         var key = me._getIterationKey(iterationMap[iterationName]);
         var prev = 0;
 
@@ -217,22 +248,6 @@ Ext.define('ReleasePlanCalculator', {
         if (iterationData[key]) {
           actualBurnup.push(iterationData[key]);
         }
-      });
-
-      Ext.Array.each(iterationShim, function (iteration) {
-        var prev = 0;
-
-        if (plannedBurnup.length > 0) {
-          prev = actualBurnup[plannedBurnup.length - 1];
-
-          if (!prev) {
-            prev = plannedBurnup[plannedBurnup.length - 1];
-          }
-        } else {
-          prev = 0;
-        }
-
-        plannedBurnup.push(prev + velocity);
       });
 
       series.push({
@@ -261,6 +276,8 @@ Ext.define('ReleasePlanCalculator', {
         data: topline
       });
 
+      Ext.Object.each(me.releases, function (release) {
+      });
       Ext.Array.each(records, function (record) {
         var value = NaN;
         if (record._type.toLowerCase().indexOf('portfolio') === -1) {
@@ -288,7 +305,7 @@ Ext.define('ReleasePlanCalculator', {
         data: piTopline
       });
 
-      var categories = [];
+      categories = [];
       Ext.Array.each(iterationOrder, function (iName) {
         categories.push(me._getIterationKey(iterationMap[iName]));
       });
