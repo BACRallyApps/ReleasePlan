@@ -49,6 +49,25 @@ var __sumArray = function (arr, selectorFn) {
 Ext.define('ReleasePlanCalculator', {
     extend: 'Rally.data.lookback.calculator.BaseCalculator',
 
+    _mapReleasesByName: Ext.bind(__map, this, ['Name'], 0),
+
+    _sortReleasesByStartDate: Ext.bind(__sortByDate, this, ['ReleaseStartDate', 'Name'], 0),
+
+    _mapIterationsByName: Ext.bind(__map, this, ['Name'], 0),
+
+    _sortIterationsByStartDate: Ext.bind(__sortByDate, this, ['StartDate', 'Name'], 0),
+
+    _sumArrayByPlanEstimate: Ext.bind(__sumArray, this, [function (item) { return item.PlanEstimate || '0'; }], 1),
+
+    _sumArrayByPreliminaryEstimate: Ext.bind(__sumArray, this, [function (item) {
+      if (item.raw) { item = item.raw; }
+      if (item.PreliminaryEstimate) {
+        return item.PreliminaryEstimate.Value || '0';
+      } else {
+        return '0';
+      }
+    }], 1),
+
     prepareChartData: function (stores) {
       var snapshots = [];
 
@@ -194,14 +213,6 @@ Ext.define('ReleasePlanCalculator', {
       return ret;
     },
 
-    _mapReleasesByName: Ext.bind(__map, this, ['Name'], 0),
-
-    _sortReleasesByStartDate: Ext.bind(__sortByDate, this, ['ReleaseStartDate', 'Name'], 0),
-
-    _mapIterationsByName: Ext.bind(__map, this, ['Name'], 0),
-
-    _sortIterationsByStartDate: Ext.bind(__sortByDate, this, ['StartDate', 'Name'], 0),
-
     _getIterations: function (records) {
       var iterations = [];
 
@@ -212,6 +223,28 @@ Ext.define('ReleasePlanCalculator', {
       });
 
       return iterations;
+    },
+
+    _getBucketKey: function (record) {
+      return this._getIterationKey(record.Iteration);
+    },
+
+    _getIterationKey: function (iteration) {
+      var rawDate = Rally.util.DateTime.fromIsoString(iteration.EndDate);
+      var timezone = Rally.util.DateTime.parseTimezoneOffset(iteration.EndDate);
+      var localDate = Rally.util.DateTime.add(rawDate, 'minute', timezone * -1);
+
+      console.log('Date', rawDate, localDate);
+      var date = Rally.util.DateTime.formatWithDefault(localDate);
+      return iteration.Name + '<br>' + date;
+    },
+
+    _pushRecord: function (arr, itm) {
+      if (!Ext.isArray(arr)) {
+        return [itm];
+      } else {
+        return arr.concat([itm]);
+      }
     },
 
     runCalculation: function (records) {
@@ -344,37 +377,4 @@ Ext.define('ReleasePlanCalculator', {
         series: series
       };
     },
-
-    _getBucketKey: function (record) {
-      return this._getIterationKey(record.Iteration);
-    },
-
-    _getIterationKey: function (iteration) {
-      var rawDate = Rally.util.DateTime.fromIsoString(iteration.EndDate);
-      var timezone = Rally.util.DateTime.parseTimezoneOffset(iteration.EndDate);
-      var localDate = Rally.util.DateTime.add(rawDate, 'minute', timezone * -1);
-
-      console.log('Date', rawDate, localDate);
-      var date = Rally.util.DateTime.formatWithDefault(localDate);
-      return iteration.Name + '<br>' + date;
-    },
-
-    _pushRecord: function (arr, itm) {
-      if (!Ext.isArray(arr)) {
-        return [itm];
-      } else {
-        return arr.concat([itm]);
-      }
-    },
-
-    _sumArrayByPlanEstimate: Ext.bind(__sumArray, this, [function (item) { return item.PlanEstimate || '0'; }], 1),
-
-    _sumArrayByPreliminaryEstimate: Ext.bind(__sumArray, this, [function (item) {
-      if (item.raw) { item = item.raw; }
-      if (item.PreliminaryEstimate) {
-        return item.PreliminaryEstimate.Value || '0';
-      } else {
-        return '0';
-      }
-    }], 1),
 });
