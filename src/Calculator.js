@@ -214,7 +214,9 @@ Ext.define('ReleasePlanCalculator', {
         }
 
         plannedBurnup.push(prev + velocity);
-        actualBurnup.push(iterationData[key]);
+        if (iterationData[key]) {
+          actualBurnup.push(iterationData[key]);
+        }
       });
 
       Ext.Array.each(iterationShim, function (iteration) {
@@ -286,8 +288,13 @@ Ext.define('ReleasePlanCalculator', {
         data: piTopline
       });
 
+      var categories = [];
+      Ext.Array.each(iterationOrder, function (iName) {
+        categories.push(me._getIterationKey(iterationMap[iName]));
+      });
+
       return {
-        categories: Ext.Object.getKeys(iterationData).concat(iterationShim),
+        categories: categories.concat(iterationShim),
         series: series
       };
     },

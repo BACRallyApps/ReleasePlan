@@ -92,11 +92,12 @@ Ext.define('CustomApp', {
           rels.push(scope.getRecord());
 
           rels.sort(function (a, b) {
-            var da = Rally.util.DateTime.fromIsoString(a.ReleaseStartDate);
-            var db = Rally.util.DateTime.fromIsoString(b.ReleaseStartDate);
+            var da = Rally.util.DateTime.fromIsoString(a.raw.ReleaseStartDate);
+            var db = Rally.util.DateTime.fromIsoString(b.raw.ReleaseStartDate);
             return Rally.util.DateTime.getDifference(da, db, 'day');
           });
 
+          debugger;
           me._createChart(rels);
         }
       };

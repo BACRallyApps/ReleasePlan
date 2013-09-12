@@ -129,7 +129,7 @@ Ext.define('ReleasePlanCalculator', {
 
       for (i = 0; i < numToCreate; i++) {
         currentDate = Rally.util.DateTime.add(currentDate, 'day', 14);
-        iteration.Name = "Future Iteration " + i;
+        iteration.Name = "Future Iteration " + (i + 1);
         iteration.EndDate = Rally.util.DateTime.toIsoString(currentDate);
         iterations.push(me._getIterationKey(iteration));
       }
@@ -226,7 +226,9 @@ Ext.define('ReleasePlanCalculator', {
         }
 
         plannedBurnup.push(prev + velocity);
-        actualBurnup.push(iterationData[key]);
+        if (iterationData[key]) {
+          actualBurnup.push(iterationData[key]);
+        }
       });
 
       Ext.Array.each(iterationShim, function (iteration) {
@@ -298,8 +300,13 @@ Ext.define('ReleasePlanCalculator', {
         data: piTopline
       });
 
+      var categories = [];
+      Ext.Array.each(iterationOrder, function (iName) {
+        categories.push(me._getIterationKey(iterationMap[iName]));
+      });
+
       return {
-        categories: Ext.Object.getKeys(iterationData).concat(iterationShim),
+        categories: categories.concat(iterationShim),
         series: series
       };
     },
@@ -435,11 +442,12 @@ Ext.define('CustomApp', {
           rels.push(scope.getRecord());
 
           rels.sort(function (a, b) {
-            var da = Rally.util.DateTime.fromIsoString(a.ReleaseStartDate);
-            var db = Rally.util.DateTime.fromIsoString(b.ReleaseStartDate);
+            var da = Rally.util.DateTime.fromIsoString(a.raw.ReleaseStartDate);
+            var db = Rally.util.DateTime.fromIsoString(b.raw.ReleaseStartDate);
             return Rally.util.DateTime.getDifference(da, db, 'day');
           });
 
+          debugger;
           me._createChart(rels);
         }
       };
