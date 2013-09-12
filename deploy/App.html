@@ -236,10 +236,19 @@ Ext.define('ReleasePlanCalculator', {
         iterationData[key] = 0;
       });
 
-      Ext.Object.each(acceptedRawData, function (key, data) {
-        totalCount = me._sumArray(data) + totalCount;
-        iterationData[key] = totalCount;
+      Ext.Array.each(allIterations, function (iteration) {
+        var key = me._getIterationKey(iterationMap[iteration]);
+        var amount = me._sumArray(acceptedRawData[key])
+        totalCount = amount + totalCount;
+
+        if (amount) {
+          iterationData[key] = totalCount;
+        }
       });
+      //Ext.Object.each(acceptedRawData, function (key, data) {
+        //totalCount = me._sumArray(data) + totalCount;
+        //iterationData[key] = totalCount;
+      //});
 
       console.log('iterationOrder', iterationOrder);
       Ext.Array.each(allIterations, function (iterationName) {
