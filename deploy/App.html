@@ -44,6 +44,20 @@ var __sortByDate = function (dateField, outField, map) {
   return sorted;
 };
 
+var __sumArray = function (arr, selectorFn) {
+  var count = 0;
+
+  Ext.Array.each(arr, function (item) {
+    var num = parseInt(selectorFn(item) + '', 10);
+
+    if (!isNaN(num)) {
+      count = count + num;
+    }
+  });
+
+  return count;
+};
+
 Ext.define('ReleasePlanCalculator', {
     extend: 'Rally.data.lookback.calculator.BaseCalculator',
 
@@ -115,6 +129,21 @@ Ext.define('ReleasePlanCalculator', {
       return bucket;
     },
 
+    _bucketStoriesIntoReleases: function (records) {
+      var bucket = {};
+      Ext.Array.each(records, function (record) {
+        if (record._type.toLowerCase().indexOf('portfolioitem') !== -1) { return; }
+        if (record._type.toLowerCase().indexOf('iteration') !== -1) { return; }
+
+        if (!record.Release) { return; }
+
+        bucket[record.Release.Name] = bucket[record.Release.Name] || [];
+        bucket[record.Release.Name].push(record);
+      });
+
+      return bucket;
+    },
+
     _computeNumberOfIterations: function (releases) {
       var startRelease = releases[0];
       var endRelease = releases[releases.length - 1];
@@ -159,8 +188,22 @@ Ext.define('ReleasePlanCalculator', {
       var rStart = Rally.util.DateTime.fromIsoString(release.ReleaseStartDate);
       var rEnd = Rally.util.DateTime.fromIsoString(release.ReleaseDate);
 
-      return !!((Rally.util.DateTime.difference(iStart, rStart, 'day') >= 0) &&
-                (Rally.util.DateTime.difference(rEnd, iStart, 'day') >= 0));
+      return !!((Rally.util.DateTime.getDifference(iStart, rStart, 'day') >= 0) &&
+                (Rally.util.DateTime.getDifference(rEnd, iStart, 'day') >= 0));
+    },
+
+    _getReleaseFromIteration: function (iteration, releases) {
+      var me = this;
+      var ret = null;
+
+      Ext.Array.each(releases, function (release) {
+        if (ret) { return; }
+        if (me._isIterationInRelease(iteration, release.raw)) {
+          ret = release;
+        }
+      });
+
+      return ret;
     },
 
     _mapReleasesByName: Ext.bind(__map, this, ['Name'], 0),
@@ -211,8 +254,8 @@ Ext.define('ReleasePlanCalculator', {
       var allIterations = iterationOrder.concat(iterationShim);
 
       var releaseData = me._bucketFeaturesIntoReleases(records);
+      var releaseStoryData = me._bucketStoriesIntoReleases(records);
 
-      debugger;
       var categories;
       var series = [];
       var totalCount = 0;
@@ -233,15 +276,40 @@ Ext.define('ReleasePlanCalculator', {
       var prev = 0;
 
 
+      totalCount = 0;
+      Ext.Array.each(releaseOrder, function (release) {
+        var amount = me._sumArrayByPreliminaryEstimate(releaseData[release]);
+
+        if (amount) {
+          totalCount = totalCount + amount;
+        }
+
+        piToplineData[release] = totalCount;
+      });
+
+      totalCount = 0;
+      Ext.Array.each(releaseOrder, function (release) {
+        var amount = me._sumArrayByPlanEstimate(releaseStoryData[release]);
+
+        if (amount) {
+          totalCount = totalCount + amount;
+        }
+
+        toplineData[release] = totalCount;
+      });
+
       Ext.Object.each(rawData, function (key, data) {
         iterationData[key] = 0;
       });
 
+      totalCount = 0;
       Ext.Array.each(allIterations, function (iterationName) {
         var key = me._getIterationKey(iterationMap[iterationName]);
-        var amount = me._sumArray(acceptedRawData[key]);
+        var amount = me._sumArrayByPlanEstimate(acceptedRawData[key]);
 
         plannedBurnup.push(prev + velocity);
+        piTopline.push(piToplineData[me._getReleaseFromIteration(iterationMap[iterationName], me.releases).raw.Name] || 0);
+        topline.push(toplineData[me._getReleaseFromIteration(iterationMap[iterationName], me.releases).raw.Name] || 0);
 
         if (amount) {
           totalCount = amount + totalCount;
@@ -251,7 +319,6 @@ Ext.define('ReleasePlanCalculator', {
           prev = prev + velocity;
         }
       });
-      debugger;
 
       series.push({
         type: 'column',
@@ -265,42 +332,11 @@ Ext.define('ReleasePlanCalculator', {
         data: plannedBurnup
       });
 
-      Ext.Object.each(rawData, function (key, data) {
-        toplineCount = me._sumArray(data) + toplineCount;
-      });
-
-      for (i = 1, ii = Ext.Object.getKeys(iterationData).length; i <= ii; i++) {
-        topline.push(toplineCount);
-      }
-
       series.push({
         type: 'line',
         name: 'Story Point Topline',
         data: topline
       });
-
-      Ext.Object.each(me.releases, function (release) {
-      });
-      Ext.Array.each(records, function (record) {
-        var value = NaN;
-        if (record._type.toLowerCase().indexOf('portfolio') === -1) {
-          return;
-        }
-
-        if (record.PreliminaryEstimate) {
-          value = parseInt(record.PreliminaryEstimate.Value + '', 10);
-        }
-
-        console.log('Value for PI', record, value);
-
-        if (!isNaN(value)) {
-          piToplineCount = piToplineCount + value;
-        }
-      });
-
-      for (i = 1, ii = Ext.Object.getKeys(iterationData).length; i <= ii; i++) {
-        piTopline.push(piToplineCount);
-      }
 
       series.push({
         type: 'line',
@@ -312,6 +348,8 @@ Ext.define('ReleasePlanCalculator', {
       Ext.Array.each(iterationOrder, function (iName) {
         categories.push(me._getIterationKey(iterationMap[iName]));
       });
+
+      debugger;
 
       return {
         categories: categories.concat(iterationShim),
@@ -341,19 +379,16 @@ Ext.define('ReleasePlanCalculator', {
       }
     },
 
-    _sumArray: function (arr) {
-      var count = 0;
+    _sumArrayByPlanEstimate: Ext.bind(__sumArray, this, [function (item) { return item.PlanEstimate || '0'; }], 1),
 
-      Ext.Array.each(arr, function (item) {
-        var num = parseInt(item.PlanEstimate + '', 10);
-
-        if (!isNaN(num)) {
-          count = count + num;
-        }
-      });
-
-      return count;
-    }
+    _sumArrayByPreliminaryEstimate: Ext.bind(__sumArray, this, [function (item) {
+      if (item.raw) { item = item.raw; }
+      if (item.PreliminaryEstimate) {
+        return item.PreliminaryEstimate.Value || '0';
+      } else {
+        return '0';
+      }
+    }], 1),
 });
 
 var Ext = window.Ext4 || window.Ext;
