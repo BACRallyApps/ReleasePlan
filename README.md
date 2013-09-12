@@ -3,6 +3,7 @@ ReleasePlan
 
 ## Overview
 
+![Screenshot](https://raw.github.com/Echo3ToEcho7/ReleasePlan/master/screenshot/screenshot.png)
 
 ## License
 
