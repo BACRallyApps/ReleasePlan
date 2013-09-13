@@ -293,7 +293,7 @@ Ext.define('ReleasePlanCalculator', {
       var plannedBurnup = [];
       var velocity = parseInt(me.velocity + '', 10);
       var i, ii;
-      var prev = 0;
+      var prev;
 
 
       totalCount = 0;
@@ -323,13 +323,15 @@ Ext.define('ReleasePlanCalculator', {
       });
 
       totalCount = 0;
+      prev = 0;
       Ext.Array.each(allIterations, function (iterationName) {
         console.log('Toplines', iterationName);
         var key = me._getIterationKey(iterationMap[iterationName]);
         var amount = me._sumArrayByPlanEstimate(acceptedRawData[key]);
         var piRelease = me._getReleaseFromIteration(iterationMap[iterationName], me.releases);
 
-        console.log('piRelease', piRelease);
+        console.log('amount', amount);
+        console.log('prev', prev);
 
         plannedBurnup.push(prev + velocity);
 
@@ -348,6 +350,7 @@ Ext.define('ReleasePlanCalculator', {
         } else {
           prev = prev + velocity;
         }
+        console.log('totalCount', totalCount);
       });
 
       series.push({
