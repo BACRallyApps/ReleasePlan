@@ -337,8 +337,8 @@ Ext.define('ReleasePlanCalculator', {
           piTopline.push(piToplineData[piRelease.raw.Name] || 0);
           topline.push(toplineData[piRelease.raw.Name] || 0);
         } else {
-          piTopline.push(0);
-          topline.push(0);
+          piTopline.push(piTopline[piTopline.length-1]);
+          topline.push(topline[topline.length - 1]);
         }
 
         if (amount) {
