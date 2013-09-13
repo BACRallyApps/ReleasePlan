@@ -201,7 +201,7 @@ Ext.define('ReleasePlanCalculator', {
 
     _getReleaseFromIteration: function (iteration, releases) {
       var me = this;
-      var ret = null
+      var ret = null;
       Ext.Array.each(releases, function (release) {
         if (ret) { return; }
         if (me._isIterationInRelease(iteration, release.raw)) {
@@ -335,10 +335,11 @@ Ext.define('ReleasePlanCalculator', {
 
         if (piRelease) {
           piTopline.push(piToplineData[piRelease.raw.Name] || 0);
+          topline.push(toplineData[piRelease.raw.Name] || 0);
         } else {
           piTopline.push(0);
+          topline.push(0);
         }
-        topline.push(toplineData[me._getReleaseFromIteration(iterationMap[iterationName], me.releases).raw.Name] || 0);
 
         if (amount) {
           totalCount = amount + totalCount;
