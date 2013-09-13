@@ -325,11 +325,20 @@ Ext.define('ReleasePlanCalculator', {
 
       totalCount = 0;
       Ext.Array.each(allIterations, function (iterationName) {
+        console.log('Toplines', iterationname);
         var key = me._getIterationKey(iterationMap[iterationName]);
         var amount = me._sumArrayByPlanEstimate(acceptedRawData[key]);
+        var piRelease = me._getReleaseFromIteration(iterationMap[iterationName], me.releases);
+
+        console.log('piRelease', piRelease);
 
         plannedBurnup.push(prev + velocity);
-        piTopline.push(piToplineData[me._getReleaseFromIteration(iterationMap[iterationName], me.releases).raw.Name] || 0);
+
+        if (piRelease) {
+          piTopline.push(piToplineData[piRelease.raw.Name] || 0);
+        } else {
+          piTopline.push(0);
+        }
         topline.push(toplineData[me._getReleaseFromIteration(iterationMap[iterationName], me.releases).raw.Name] || 0);
 
         if (amount) {
