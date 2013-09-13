@@ -80,7 +80,8 @@ Ext.define('CustomApp', {
       var preRels = parseInt('' + me.getSetting('includeBefore'), 10) || 0;
       var supRels = parseInt('' + me.getSetting('includeAfter'), 10) || 0;
 
-      var doProcess = function (store, records, success) {
+      var doProcess = function (records, operator, success) {
+        console.log('doProcess:arguments', arguments);
         var rels = [];
 
         if (records) {
@@ -105,17 +106,19 @@ Ext.define('CustomApp', {
         numReleaseReqs++;
         requestedReleases.push(Ext.create('Rally.data.WsapiDataStore', {
           model: 'Release',
-          autoLoad: true,
+          //autoLoad: true,
           pageSize: preRels,
+          remoteFilter: true,
+          remoteSort: true,
           sort: 'ReleaseStartDate ASC',
           filters: [{
             property: 'ReleaseStartDate',
             operator: '<',
             value: me._getStartDate(scope.getRecord())
-          }],
-          listeners: {
-            load: doProcess
-          }
+          }]
+          //listeners: {
+            //load: doProcess
+          //}
         }));
       }
 
@@ -123,19 +126,25 @@ Ext.define('CustomApp', {
         numReleaseReqs++;
         requestedReleases.push(Ext.create('Rally.data.WsapiDataStore', {
           model: 'Release',
-          autoLoad: true,
+          //autoLoad: true,
           pageSize: supRels,
+          remoteFilter: true,
+          remoteSort: true,
           sort: 'ReleaseStartDate ASC',
           filters: [{
             property: 'ReleaseDate',
             operator: '>',
             value: me._getEndDate(scope.getRecord())
-          }],
-          listeners: {
-            load: doProcess
-          }
+          }]
+          //listeners: {
+            //load: doProcess
+          //}
         }));
       }
+
+      Ext.Array.each(requestedReleases, function (rr) {
+        rr.loadPage(1, { scope: me, callback: doProcess });
+      });
 
       if (!(preRels || supRels)) {
         doProcess();
