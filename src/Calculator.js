@@ -201,8 +201,7 @@ Ext.define('ReleasePlanCalculator', {
 
     _getReleaseFromIteration: function (iteration, releases) {
       var me = this;
-      var ret = null;
-
+      var ret = null
       Ext.Array.each(releases, function (release) {
         if (ret) { return; }
         if (me._isIterationInRelease(iteration, release.raw)) {
@@ -234,7 +233,7 @@ Ext.define('ReleasePlanCalculator', {
       var timezone = Rally.util.DateTime.parseTimezoneOffset(iteration.EndDate);
       var localDate = Rally.util.DateTime.add(rawDate, 'minute', timezone * -1);
 
-      console.log('Date', rawDate, localDate);
+      //console.log('Date', rawDate, localDate);
       var date = Rally.util.DateTime.formatWithDefault(localDate);
       return iteration.Name + '<br>' + date;
     },
@@ -325,7 +324,7 @@ Ext.define('ReleasePlanCalculator', {
 
       totalCount = 0;
       Ext.Array.each(allIterations, function (iterationName) {
-        console.log('Toplines', iterationname);
+        console.log('Toplines', iterationName);
         var key = me._getIterationKey(iterationMap[iterationName]);
         var amount = me._sumArrayByPlanEstimate(acceptedRawData[key]);
         var piRelease = me._getReleaseFromIteration(iterationMap[iterationName], me.releases);
