@@ -106,7 +106,7 @@ Ext.define('CustomApp', {
         requestedReleases.push(Ext.create('Rally.data.WsapiDataStore', {
           model: 'Release',
           autoLoad: true,
-          limit: preRels,
+          pageSize: preRels,
           sort: 'ReleaseStartDate ASC',
           filters: [{
             property: 'ReleaseStartDate',
@@ -124,7 +124,7 @@ Ext.define('CustomApp', {
         requestedReleases.push(Ext.create('Rally.data.WsapiDataStore', {
           model: 'Release',
           autoLoad: true,
-          limit: supRels,
+          pageSize: supRels,
           sort: 'ReleaseStartDate ASC',
           filters: [{
             property: 'ReleaseDate',
