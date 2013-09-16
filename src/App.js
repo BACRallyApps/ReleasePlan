@@ -110,7 +110,10 @@ Ext.define('CustomApp', {
           pageSize: preRels,
           remoteFilter: true,
           remoteSort: true,
-          sort: 'ReleaseStartDate ASC',
+          sorters: [{ 
+            property: 'ReleaseStartDate',
+            direction: 'DESC'
+          }],
           filters: [{
             property: 'ReleaseStartDate',
             operator: '<',
@@ -130,7 +133,10 @@ Ext.define('CustomApp', {
           pageSize: supRels,
           remoteFilter: true,
           remoteSort: true,
-          sort: 'ReleaseStartDate ASC',
+          sorters: [{ 
+            property: 'ReleaseStartDate',
+            direction: 'ASC'
+          }],
           filters: [{
             property: 'ReleaseDate',
             operator: '>',
