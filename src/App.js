@@ -110,6 +110,10 @@ Ext.define('CustomApp', {
           pageSize: preRels,
           remoteFilter: true,
           remoteSort: true,
+          context: {
+            projectScopeUp: false,
+            projectScopeDown: false
+          },
           sorters: [{ 
             property: 'ReleaseStartDate',
             direction: 'DESC'
@@ -119,9 +123,6 @@ Ext.define('CustomApp', {
             operator: '<',
             value: me._getStartDate(scope.getRecord())
           }]
-          //listeners: {
-            //load: doProcess
-          //}
         }));
       }
 
@@ -133,6 +134,10 @@ Ext.define('CustomApp', {
           pageSize: supRels,
           remoteFilter: true,
           remoteSort: true,
+          context: {
+            projectScopeUp: false,
+            projectScopeDown: false
+          },
           sorters: [{ 
             property: 'ReleaseStartDate',
             direction: 'ASC'
@@ -142,9 +147,6 @@ Ext.define('CustomApp', {
             operator: '>',
             value: me._getEndDate(scope.getRecord())
           }]
-          //listeners: {
-            //load: doProcess
-          //}
         }));
       }
 
