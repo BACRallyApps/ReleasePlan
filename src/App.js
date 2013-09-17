@@ -81,7 +81,7 @@ Ext.define('CustomApp', {
       var supRels = parseInt('' + me.getSetting('includeAfter'), 10) || 0;
 
       var doProcess = function (records, operator, success) {
-        console.log('doProcess:arguments', arguments);
+        //console.log('doProcess:arguments', arguments);
         var rels = [];
 
         if (records) {

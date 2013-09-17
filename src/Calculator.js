@@ -18,7 +18,7 @@ var __sortByDate = function (dateField, outField, map) {
   var arr = Ext.Object.getValues(map);
   var sorted = [];
 
-  console.log('__sortByDate:arr', arr);
+  //console.log('__sortByDate:arr', arr);
   arr.sort(function (a, b) {
     var da = Rally.util.DateTime.fromIsoString(a[dateField]);
     var db = Rally.util.DateTime.fromIsoString(b[dateField]);
@@ -247,7 +247,7 @@ Ext.define('ReleasePlanCalculator', {
     },
 
     runCalculation: function (records) {
-      console.log('Running Calculations');
+      //console.log('Running Calculations');
       //console.dir(records);
 
       var me = this;
@@ -325,13 +325,13 @@ Ext.define('ReleasePlanCalculator', {
       totalCount = 0;
       prev = 0;
       Ext.Array.each(allIterations, function (iterationName) {
-        console.log('Toplines', iterationName);
+        //console.log('Toplines', iterationName);
         var key = me._getIterationKey(iterationMap[iterationName]);
         var amount = me._sumArrayByPlanEstimate(acceptedRawData[key]);
         var piRelease = me._getReleaseFromIteration(iterationMap[iterationName], me.releases);
 
-        console.log('amount', amount);
-        console.log('prev', prev);
+        //console.log('amount', amount);
+        //console.log('prev', prev);
 
         plannedBurnup.push(prev + velocity);
 
@@ -350,7 +350,7 @@ Ext.define('ReleasePlanCalculator', {
         } else {
           prev = prev + velocity;
         }
-        console.log('totalCount', totalCount);
+        //console.log('totalCount', totalCount);
       });
 
       series.push({
