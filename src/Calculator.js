@@ -167,15 +167,24 @@ Ext.define('ReleasePlanCalculator', {
       return count;
     },
 
-    _shimFutureIterations: function (iterationOrder, iterationMap, totalIterations) {
+    _shimFutureIterations: function (iterationOrder, iterationMap, totalIterations, earliestStartDate) {
       var me = this;
+
       var lastIteration = iterationMap[iterationOrder[iterationOrder.length - 1]];
-      var currentSDate = Rally.util.DateTime.fromIsoString(lastIteration.StartDate);
-      var currentEDate = Rally.util.DateTime.fromIsoString(lastIteration.EndDate);
+      var currentSDate;
+      var currentEDate;
       var numToCreate = totalIterations - iterationOrder.length;
       var iteration = { Name: '', EndDate: ''};
       var iterations = [];
       var i;
+
+      if (!lastIteration) {
+        currentSDate = Rally.util.DataTime.fromIsoString(earliestStartDate);
+        currentEDate = Rally.util.DateTime.add(currentSDate, 13, 'day');
+      } else {
+        currentSDate = Rally.util.DateTime.fromIsoString(lastIteration.StartDate);
+        currentEDate = Rally.util.DateTime.fromIsoString(lastIteration.EndDate);
+      }
 
       for (i = 0; i < numToCreate; i++) {
         currentSDate = Rally.util.DateTime.add(currentSDate, 'day', 14);
@@ -270,7 +279,8 @@ Ext.define('ReleasePlanCalculator', {
       });
 
       var countOfIterations = me._computeNumberOfIterations(me.releases);
-      var iterationShim = me._shimFutureIterations(iterationOrder, iterationMap, countOfIterations);
+      var startDate = me.releases[0].raw.ReleaseStartDate;
+      var iterationShim = me._shimFutureIterations(iterationOrder, iterationMap, countOfIterations, startDate);
       var allIterations = iterationOrder.concat(iterationShim);
 
       var releaseData = me._bucketFeaturesIntoReleases(records);
@@ -381,8 +391,6 @@ Ext.define('ReleasePlanCalculator', {
       Ext.Array.each(iterationOrder, function (iName) {
         categories.push(me._getIterationKey(iterationMap[iName]));
       });
-
-      debugger;
 
       return {
         categories: categories.concat(iterationShim),
