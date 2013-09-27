@@ -168,16 +168,23 @@ Ext.define('CustomApp', {
       var beginOp = includePartialIterations ? '>' : '>=';
       var endProperty = includePartialIterations ? 'Iteration.StartDate' : 'Iteration.EndDate';
       var endOp = includePartialIterations ? '<' : '<=';
+      var startDate = me._getStartDate(releases[0]);
+      var endDate = me._getEndDate(releases[releases.length - 1]);
 
       query = Rally.data.QueryFilter.and([{
         property: beginProperty,
         operator: beginOp,
-        value: me._getStartDate(releases[0])
+        value: startDate
       }, {
         property: endProperty,
         operator: endOp,
-        value: me._getEndDate(releases[releases.length - 1])
+        value: endDate
       }]);
+
+      query = query.or(Rally.data.QueryFilter.and([
+        { property: 'Release.ReleaseStartDate', operator: '>=', value: startDate },
+        { property: 'Release.ReleaseDate'     , operator: '<=', value: endDate }
+      ]));
 
       return query;
     },
