@@ -377,7 +377,7 @@ Ext.define('ReleasePlanCalculator', {
 
       series.push({
         type: 'line',
-        name: 'Story Point Topline',
+        name: 'Scheduled Story Points',
         data: topline
       });
 
