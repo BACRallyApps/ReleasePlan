@@ -384,6 +384,7 @@ Ext.define('ReleasePlanCalculator', {
       series.push({
         type: 'line',
         name: 'Feature Point Topline',
+        visible: false,
         data: piTopline
       });
 
