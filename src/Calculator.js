@@ -205,7 +205,7 @@ Ext.define('ReleasePlanCalculator', {
       var rEnd = Rally.util.DateTime.fromIsoString(release.ReleaseDate);
 
       return !!((Rally.util.DateTime.getDifference(iStart, rStart, 'day') >= 0) &&
-                (Rally.util.DateTime.getDifference(rEnd, iStart, 'day') >= 0));
+                (Rally.util.DateTime.getDifference(rEnd, iStart, 'day') >= 1));
     },
 
     _getReleaseFromIteration: function (iteration, releases) {
