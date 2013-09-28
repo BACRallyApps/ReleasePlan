@@ -298,6 +298,13 @@ Ext.define('ReleasePlanCalculator', {
       var piToplineData = {};
       var piTopline = [];
 
+      var scheduledCount = 0;
+      var scheduledData = {};
+      var scheduledPrevRel = "";
+      var scheduledPrevAmount = 0;
+      var scheduledReleaseData = {};
+      var scheduled = [];
+
       var actualBurnup = [];
 
       var plannedBurnup = [];
@@ -305,6 +312,30 @@ Ext.define('ReleasePlanCalculator', {
       var i, ii;
       var prev;
 
+
+      scheduledCount = 0;
+      scheduledPrevAmount = 0;
+      Ext.Array.each(iterationOrder, function (iteration) {
+        var rel = me._getReleaseFromIteration(iterationMap[iteration], me.releases);
+        var amount = parseInt('' + me._sumArrayByPlanEstimate(rawData[me._getIterationKey(iterationMap[iteration])]));
+        scheduledData[rel.raw.Name] = scheduledData[rel.raw.Name] || 0;
+
+        console.log('before', iteration, rel, scheduledData[rel.raw.Name], scheduledCount, scheduledPrevAmount, scheduledPrevRel);
+
+        if (rel.raw.Name !== scheduledPrevRel) {
+          scheduledCount = scheduledPrevAmount;
+          scheduledPrevRel = rel.raw.Name;
+        }
+
+        if (amount && !isNaN(amount)) {
+          scheduledData[rel.raw.Name] = scheduledData[rel.raw.Name] + amount + scheduledCount;
+          scheduledPrevAmount = scheduledData[rel.raw.Name];
+        }
+
+        scheduledCount = 0;
+
+        console.log('after', iteration, rel, scheduledData[rel.raw.Name], scheduledCount, scheduledPrevAmount, scheduledPrevRel);
+      });
 
       totalCount = 0;
       Ext.Array.each(releaseOrder, function (release) {
@@ -340,18 +371,20 @@ Ext.define('ReleasePlanCalculator', {
         var amount = me._sumArrayByPlanEstimate(acceptedRawData[key]);
         var piRelease = me._getReleaseFromIteration(iterationMap[iterationName], me.releases);
 
-        console.log('iteration key', key);
-        console.log('amount', amount);
-        console.log('prev', prev);
+        //console.log('iteration key', key);
+        //console.log('amount', amount);
+        //console.log('prev', prev);
 
         plannedBurnup.push(prev + velocity);
 
         if (piRelease) {
           piTopline.push(piToplineData[piRelease.raw.Name] || 0);
           topline.push(toplineData[piRelease.raw.Name] || 0);
+          scheduled.push(scheduledData[piRelease.raw.Name] || 0);
         } else {
           piTopline.push(piTopline[piTopline.length-1]);
           topline.push(topline[topline.length - 1]);
+          scheduled.push(scheduled[scheduled.length - 1]);
         }
 
         if (amount) {
@@ -380,6 +413,12 @@ Ext.define('ReleasePlanCalculator', {
       series.push({
         type: 'line',
         name: 'Scheduled Story Points',
+        data: scheduled
+      });
+
+      series.push({
+        type: 'line',
+        name: 'Release Topline',
         data: topline
       });
 
