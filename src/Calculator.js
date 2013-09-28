@@ -340,8 +340,9 @@ Ext.define('ReleasePlanCalculator', {
         var amount = me._sumArrayByPlanEstimate(acceptedRawData[key]);
         var piRelease = me._getReleaseFromIteration(iterationMap[iterationName], me.releases);
 
-        //console.log('amount', amount);
-        //console.log('prev', prev);
+        console.log('iteration key', key);
+        console.log('amount', amount);
+        console.log('prev', prev);
 
         plannedBurnup.push(prev + velocity);
 
@@ -358,6 +359,7 @@ Ext.define('ReleasePlanCalculator', {
           actualBurnup.push(totalCount);
           prev = totalCount;
         } else {
+          actualBurnup.push(0);
           prev = prev + velocity;
         }
         //console.log('totalCount', totalCount);
