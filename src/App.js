@@ -221,6 +221,10 @@ Ext.define('CustomApp', {
 
       me.removeAll(true);
 
+      var subtitle = Ext.Array.map(releases, function (release) {
+        return release.get('Name');
+      }).join(', ');
+
       chart = Ext.create('Rally.ui.chart.Chart', {
         storeType: 'Rally.data.WsapiDataStore',
         storeConfig: me._getStoreConfig(query, iq),
@@ -239,7 +243,7 @@ Ext.define('CustomApp', {
             text: 'Release Plan'
           },
           subtitle: {
-            text: scope.getRecord().get('Name')
+            text: subtitle //scope.getRecord().get('Name')
           },
           xAxis: {
             title: {
