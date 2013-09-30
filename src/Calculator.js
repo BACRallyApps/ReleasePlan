@@ -93,8 +93,10 @@ Ext.define('ReleasePlanCalculator', {
           return;
         }
 
-        var key = me._getBucketKey(record);
-        rawData[key] = me._pushRecord(rawData[key], record);
+        if (record.Iteration) {
+          var key = me._getBucketKey(record);
+          rawData[key] = me._pushRecord(rawData[key], record);
+        }
       });
 
       return rawData;
@@ -113,10 +115,12 @@ Ext.define('ReleasePlanCalculator', {
           return;
         }
 
-        var key = me._getBucketKey(record);
+        if (record.Iteration) {
+          var key = me._getBucketKey(record);
 
-        if (record.AcceptedDate) {
-          acceptedRawData[key] = me._pushRecord(acceptedRawData[key], record);
+          if (record.AcceptedDate) {
+            acceptedRawData[key] = me._pushRecord(acceptedRawData[key], record);
+          }
         }
       });
 
