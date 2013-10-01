@@ -237,7 +237,13 @@ Ext.define('CustomApp', {
 
         chartConfig: {
           chart: {
-            type: 'column'
+            type: 'column',
+            height: me.getHeight(),
+            width: me.getWidth()
+          },
+          exporting: {
+            sourceHeight: me.getHeight(),
+            sourceWidth: me.getWidth()
           },
           title: {
             text: 'Release Plan'
