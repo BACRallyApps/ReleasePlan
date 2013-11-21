@@ -264,6 +264,7 @@ Ext.define('ReleasePlanCalculator', {
       //console.dir(records);
 
       var me = this;
+      var now = new Date();
       var releaseMap = me._mapReleasesByName(me.releases);
       var releaseOrder = me._sortReleasesByStartDate(releaseMap);
 
@@ -374,6 +375,9 @@ Ext.define('ReleasePlanCalculator', {
         var key = me._getIterationKey(iterationMap[iterationName]);
         var amount = me._sumArrayByPlanEstimate(acceptedRawData[key]);
         var piRelease = me._getReleaseFromIteration(iterationMap[iterationName], me.releases);
+        var iStart = Rally.util.DateTime.fromIsoString(iterationMap[iterationName].StartDate);
+        var iEnd = Rally.util.DateTime.fromIsoString(iterationMap[iterationName].EndDate);
+        var currentIteration;
 
         //console.log('iteration key', key);
         //console.log('amount', amount);
@@ -391,10 +395,17 @@ Ext.define('ReleasePlanCalculator', {
           scheduled.push(scheduled[scheduled.length - 1]);
         }
 
+        currentIteration = Rally.util.DateTime.getDifference(iEnd, now, 'day') > 0;
+        currentIteration = currentIteration && Rally.util.DateTime.getDifference(now, iStart, 'day') > 0;
+
         if (amount) {
           totalCount = amount + totalCount;
           actualBurnup.push(totalCount);
-          prev = totalCount;
+          if (currentIteration) {
+            prev = prev + velocity;
+          } else {
+            prev = totalCount;
+          }
         } else {
           actualBurnup.push(0);
           prev = prev + velocity;
