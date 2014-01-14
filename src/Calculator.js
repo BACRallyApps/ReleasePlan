@@ -428,6 +428,7 @@ Ext.define('ReleasePlanCalculator', {
       series.push({
         type: 'line',
         name: 'Scheduled Story Points',
+        visible: false,
         data: scheduled
       });
 
