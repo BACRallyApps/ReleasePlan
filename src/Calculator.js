@@ -325,7 +325,7 @@ Ext.define('ReleasePlanCalculator', {
         var amount = parseInt('' + me._sumArrayByPlanEstimate(rawData[me._getIterationKey(iterationMap[iteration])]));
         scheduledData[rel.raw.Name] = scheduledData[rel.raw.Name] || 0;
 
-        console.log('before', iteration, rel, scheduledData[rel.raw.Name], scheduledCount, scheduledPrevAmount, scheduledPrevRel);
+        //console.log('before', iteration, rel, scheduledData[rel.raw.Name], scheduledCount, scheduledPrevAmount, scheduledPrevRel);
 
         if (rel.raw.Name !== scheduledPrevRel) {
           scheduledCount = scheduledPrevAmount;
@@ -339,7 +339,7 @@ Ext.define('ReleasePlanCalculator', {
 
         scheduledCount = 0;
 
-        console.log('after', iteration, rel, scheduledData[rel.raw.Name], scheduledCount, scheduledPrevAmount, scheduledPrevRel);
+        //console.log('after', iteration, rel, scheduledData[rel.raw.Name], scheduledCount, scheduledPrevAmount, scheduledPrevRel);
       });
 
       totalCount = 0;
