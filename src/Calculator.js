@@ -167,7 +167,7 @@ Ext.define('ReleasePlanCalculator', {
         count++;
         currentDate = Rally.util.DateTime.add(currentDate, 'day', 14);
       }
-
+      console.log("Number of future iterations",count);
       return count;
     },
 

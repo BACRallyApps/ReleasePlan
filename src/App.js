@@ -37,6 +37,9 @@ Ext.define('CustomApp', {
     },
 
     addContent: function (scope) {
+
+      console.log("addContent");
+
       var me = this;
 
       Ext.create('Rally.data.WsapiDataStore', {
@@ -72,6 +75,15 @@ Ext.define('CustomApp', {
     },
 
     onScopeChange: function (scope) {
+      console.log(this.piTypes);
+      if (_.isUndefined(this.piTypes)) {
+        this.addContent(scope);
+      } else {
+        this.run(scope);
+      }
+    },
+
+    run : function (scope) {
       var me = this;
       var query;
       var requestedReleases = [];
