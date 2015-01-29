@@ -10,7 +10,7 @@ Ext.define('CustomApp', {
     config: {
       defaultSettings: {
         includeBefore: 0,
-        includeAfter: 0,
+        includeAfter: 1,
         includePartialSprints: false,
         teamVelocity: 50
       }
@@ -38,7 +38,7 @@ Ext.define('CustomApp', {
 
     addContent: function (scope) {
 
-      console.log("addContent");
+      // console.log("addContent");
 
       var me = this;
 
@@ -75,7 +75,7 @@ Ext.define('CustomApp', {
     },
 
     onScopeChange: function (scope) {
-      console.log(this.piTypes);
+      // console.log(this.piTypes);
       if (_.isUndefined(this.piTypes)) {
         this.addContent(scope);
       } else {
@@ -224,6 +224,24 @@ Ext.define('CustomApp', {
       return query;
     },
 
+    _createFeatureReleaseFilter : function(releaseNames) {
+
+        var filter = null; console.log("releaseNames",releaseNames);
+
+        _.each( releaseNames, function( releaseName, i ) {
+            if (releaseName !== "") {
+                var f = Ext.create('Rally.data.wsapi.Filter', {
+                        property : 'Release.Name', operator : '=', value : (releaseName) }
+                );
+                filter = (i===0) ? f : filter.or(f);
+            }
+        });
+
+        // console.log("Release Filter:",(filter!==null?filter.toString():"not set"));
+        return filter;
+
+    },
+
     _createChart: function (releases) {
       var me = this;
       var chart;
@@ -237,9 +255,15 @@ Ext.define('CustomApp', {
         return release.get('Name');
       }).join(', ');
 
+      var piReleaseFilter = me._createFeatureReleaseFilter(
+        _.map(releases,function(r) {
+          return r.get("Name");
+        })
+      );
+
       chart = Ext.create('Rally.ui.chart.Chart', {
         storeType: 'Rally.data.WsapiDataStore',
-        storeConfig: me._getStoreConfig(query, iq),
+        storeConfig: me._getStoreConfig(query, iq, piReleaseFilter),
 
         calculatorType: 'ReleasePlanCalculator',
         calculatorConfig: {
@@ -288,7 +312,7 @@ Ext.define('CustomApp', {
       return release.raw.ReleaseDate;
     },
 
-    _getStoreConfig: function (query, iq) {
+    _getStoreConfig: function (query, iq,piReleaseFilter) {
       var me = this;
       var stores = [];
 
@@ -302,7 +326,7 @@ Ext.define('CustomApp', {
 
       stores.push({
         model: me.piTypes['0'],
-        filters: me.getContext().getTimeboxScope().getQueryFilter(),
+        filters: piReleaseFilter, // me.getContext().getTimeboxScope().getQueryFilter(),
         fetch: ['Name', 'Release', 'ReleaseStartDate', 'ReleaseDate', 'PreliminaryEstimate', 'Value', 'UserStories', 'PlanEstimate']
       });
 
